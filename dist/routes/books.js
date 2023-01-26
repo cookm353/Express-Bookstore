@@ -1,5 +1,9 @@
 const express = require("express");
-const Book = require("../models/book");
+const Book = require('../models/book');
+const bookSchema = require('../../schemas/bookSchema.json');
+const jsonschema = require('jsonschema');
+const validateInput = require('../middleware/validateJSON');
+const ExpressError = require('../expressError');
 const router = new express.Router();
 /** GET / => {books: [book, ...]}  */
 router.get("/", async function (req, res, next) {
@@ -22,20 +26,25 @@ router.get("/:id", async function (req, res, next) {
     }
 });
 /** POST /   bookData => {book: newBook}  */
-router.post("/", async function (req, res, next) {
+router.post("/", validateInput, async function (req, res, next) {
     try {
-        const book = await Book.create(req.body);
-        return res.status(201).json({ book });
+        const { book } = req.body;
+        const bookExists = await Book.exists(book.isbn);
+        if (bookExists) {
+            throw new ExpressError("Book with ISBN already exists", 400);
+        }
+        const newBook = await Book.create(book);
+        return res.status(201).json({ book: newBook });
     }
     catch (err) {
         return next(err);
     }
 });
 /** PUT /[isbn]   bookData => {book: updatedBook}  */
-router.put("/:isbn", async function (req, res, next) {
+router.put("/:isbn", validateInput, async function (req, res, next) {
     try {
-        const book = await Book.update(req.params.isbn, req.body);
-        return res.json({ book });
+        const updatedBook = await Book.update(req.params.isbn, req.body);
+        return res.json({ book: updatedBook });
     }
     catch (err) {
         return next(err);
