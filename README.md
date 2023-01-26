@@ -42,10 +42,13 @@ nodemon dist/server.js
 
 - Express
 - PG
-- Locus
 - Supertest
-- Axios
+- dotenv
+- JSONSchema
 
 ## Takeaways
 
-- asdf
+- Use the values from the test object when writing tests
+- To check if an object has a property and what it's value is, use `expect().toHaveProperty(<key>, <value>)`
+- The key and value need to be in quotes or back ticks in the above test
+- 
