@@ -1,4 +1,6 @@
 const db = require("../db");
+const bookSchema = require('../../schemas/bookSchema.json')
+const jsonschema = require('jsonschema')
 
 /** Collection of related methods for books. */
 
@@ -104,6 +106,25 @@ class Book {
    * */
 
   static async update(isbn, data) {
+    // Get current book and extract keys
+    const book = await Book.findOne(isbn)
+    const bookKeys = Object.keys(book)
+    
+    // If a key isn't present in object from request, add the current values
+    for (let key of bookKeys) {
+      if (!data.book[key]) {
+        data.book[key] = book[key]
+      }
+    }
+
+    // Validation the resulting JSON schema
+    let validationResult = jsonschema.validate(book, bookSchema)
+
+    if (!validationResult.valid) {
+      const errorList = validationResult.errors.map(error => error.stack)
+      return new ExpressError(errorList, 400)
+    }
+
     const result = await db.query(
       `UPDATE books SET 
             amazon_url=($1),
@@ -123,13 +144,13 @@ class Book {
                   title,
                   year`,
       [
-        data.amazon_url,
-        data.author,
-        data.language,
-        data.pages,
-        data.publisher,
-        data.title,
-        data.year,
+        data.book.amazon_url,
+        data.book.author,
+        data.book.language,
+        data.book.pages,
+        data.book.publisher,
+        data.book.title,
+        data.book.year,
         isbn
       ]
     );
@@ -154,6 +175,8 @@ class Book {
       throw { message: `There is no book with an isbn '${isbn}`, status: 404 }
     }
   }
+
+  /** Check if a book with a given ISBN is already in the DB, returns boolean */
 
   static async exists(isbn) {
     const result = await db.query(
