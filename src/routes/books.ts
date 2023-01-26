@@ -49,7 +49,7 @@ router.post("/", validateInput, async function (req, res, next) {
 
 /** PUT /[isbn]   bookData => {book: updatedBook}  */
 
-router.put("/:isbn", validateInput async function (req, res, next) {
+router.put("/:isbn", async function (req, res, next) {
   try {
     const updatedBook = await Book.update(req.params.isbn, req.body);
     return res.json({ book: updatedBook })
