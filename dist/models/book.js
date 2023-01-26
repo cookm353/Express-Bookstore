@@ -126,5 +126,16 @@ class Book {
             throw { message: `There is no book with an isbn '${isbn}`, status: 404 };
         }
     }
+    static async exists(isbn) {
+        const result = await db.query(`SELECT *
+      FROM books
+      WHERE isbn = $1`, [isbn]);
+        if (result.rows[0]) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 }
 module.exports = Book;
